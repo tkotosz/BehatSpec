@@ -48,16 +48,12 @@ class SpecificationMethodGenerator implements Generator
      *
      * @return bool
      */
-    public function supports(Resource $resource, $generation, array $data)
+    public function supports(Resource $resource, string $generation, array $data): bool
     {
         return 'specification_method' === $generation;
     }
 
-    /**
-     * @param Resource $resource
-     * @param array             $data
-     */
-    public function generate(Resource $resource, array $data = [])
+    public function generate(Resource $resource, array $data = []): void
     {
         $method = Cased::fromCamelCase($data['method']);
         $spec = $this->filesystem->getFileContents($resource->getSpecFilename());
@@ -74,7 +70,7 @@ class SpecificationMethodGenerator implements Generator
     /**
      * @return int
      */
-    public function getPriority()
+    public function getPriority(): int
     {
         return 0;
     }
@@ -117,12 +113,13 @@ class SpecificationMethodGenerator implements Generator
      * @param $type
      * @return string
      */
-    private function renderContent(Cased $method, $type)
+    private function renderContent(Resource $resource, Cased $method, $type)
     {
         return $this->templates->renderString($this->getTemplate($type), [
             '%method%' => $method->asCamelCase(),
             '%example_name%' => 'it_should_' . $method->asSnakeCase(),
             '%constructor_example_name%' => 'it_should_be_constructed_through_' . $method->asSnakeCase(),
+            '%class%' => str_replace($resource->getSrcNamespace() . '\\', '', $resource->getSrcClassname())
         ]);
     }
 
@@ -134,7 +131,7 @@ class SpecificationMethodGenerator implements Generator
      */
     private function addExampleToSpec(Resource $resource, $spec, Cased $method, $type)
     {
-        $spec = preg_replace('/}[ \n]*$/', rtrim($this->renderContent($method, $type)) . "\n}\n", trim($spec));
+        $spec = preg_replace('/}[ \n]*$/', rtrim($this->renderContent($resource, $method, $type)) . "\n}\n", trim($spec));
         $this->filesystem->putFileContents($resource->getSpecFilename(), $spec);
         $this->informExampleAdded($resource, $method);
     }

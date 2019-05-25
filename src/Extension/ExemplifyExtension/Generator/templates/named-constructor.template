@@ -2,4 +2,5 @@
     public function %constructor_example_name%()
     {
         $this->beConstructedThrough('%method%');
+        $this->shouldHaveType(%class%::class);
     }
